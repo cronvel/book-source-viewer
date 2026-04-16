@@ -1,6 +1,37 @@
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #ffe21c);
+<script setup>
+import { ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
+
+import * as bookSource from "book-source";
+
+function test() {
+  let rawContent = "## Test\n" ;
+  let structuredDocument = bookSource.parse( rawContent ) ;
+  console.log( "structuredDocument" , structuredDocument ) ;
 }
+
+test() ;
+
+</script>
+
+<template>
+  <main class="container">
+    <h1>Hello</h1>
+
+  </main>
+</template>
+
+<style scoped>
+.logo.vite:hover {
+  filter: drop-shadow(0 0 2em #747bff);
+}
+
+.logo.vue:hover {
+  filter: drop-shadow(0 0 2em #249b73);
+}
+
+</style>
+<style>
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -110,3 +141,5 @@ button {
     background-color: #0f0f0f69;
   }
 }
+
+</style>
