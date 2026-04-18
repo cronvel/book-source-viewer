@@ -31,5 +31,18 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "cli": {
+      "description": "Book Source Viewer",
+      "args": [
+        {
+          "name": "input",
+          "index": 1,
+          "description": "Input file",
+          "takesValue": true
+        }
+      ]
+    }
   }
 }

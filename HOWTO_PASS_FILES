@@ -1,0 +1,5 @@
+
+To pass argument to the Tauri App, when in dev mod:
+
+npm run tauri dev -- --args="--foo bar --baz"
+

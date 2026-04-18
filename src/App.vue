@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { getMatches } from '@tauri-apps/plugin-cli';
 
 import * as bookSource from "book-source";
 
@@ -10,6 +11,12 @@ function test() {
   console.log( "structuredDocument" , structuredDocument ) ;
 }
 
+async function cliArgs() {
+  const matches = await getMatches() ;
+  console.log( "matches:" , matches ) ;
+}
+
+cliArgs() ;
 test() ;
 
 </script>
