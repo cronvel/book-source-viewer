@@ -1,0 +1,7 @@
+
+To pass arguments to the Tauri App, when in dev mod:
+
+npm run tauri dev -- -- -- --app-option-name app-option-value
+
+You need triple `--` after `npm run dev` to pass CLI args...
+
