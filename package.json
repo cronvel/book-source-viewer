@@ -12,6 +12,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-cli": "^2.4.1",
+    "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
     "book-source": "^0.3.10",
     "book-source-html-renderer": "^0.3.10",

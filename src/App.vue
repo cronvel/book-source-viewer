@@ -5,8 +5,15 @@ import { getMatches } from '@tauri-apps/plugin-cli';
 
 import * as bookSource from "book-source";
 
-function test() {
-  let rawContent = "## Test\n" ;
+import { readFile } from '@tauri-apps/plugin-fs';
+
+async function test() {
+  const matches = await getMatches() ;
+  console.log( "matches:" , matches ) ;
+  const inputPath = matches.args.input.value ;
+  console.log( "input path:" , inputPath ) ;
+  const rawContent = await readFile( inputPath ) ;
+  //const rawContent = "## Test\n" ;
   let structuredDocument = bookSource.parse( rawContent ) ;
   console.log( "structuredDocument" , structuredDocument ) ;
 }
@@ -16,7 +23,7 @@ async function cliArgs() {
   console.log( "matches:" , matches ) ;
 }
 
-cliArgs() ;
+//cliArgs() ;
 test() ;
 
 </script>
