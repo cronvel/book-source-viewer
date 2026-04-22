@@ -1,37 +1,62 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+
+// CLI plugin to retrieve args
 import { getMatches } from '@tauri-apps/plugin-cli';
 
-import * as bookSource from "book-source";
+// FS plugin
+import { readTextFile } from '@tauri-apps/plugin-fs';
 
-import { readFile } from '@tauri-apps/plugin-fs';
+// Path resolver (FS method do not accept relative path)
+import { resolve , join } from '@tauri-apps/api/path';
+
+import * as bookSource from './lib/bookSource.js' ;
+
+let book_source_content = ref( "<h2>Placeholder</h2>" ) ;
+
+
+
+async function loadText( path ) {
+  const text = await ( await fetch( path ) ).text() ;
+  return text ;
+}
+
+
 
 async function test() {
+  // Get the CWD, it's a Rust method created in src-tauri/src/lib.rs
+  const cwd = await invoke( 'get_cwd' ) ;
+  console.log( "CWD:" , cwd ) ;
+
+  // Get CLI args (for dev mode, npm requires triple -- after npm in order to pass the argument to the app)
   const matches = await getMatches() ;
   console.log( "matches:" , matches ) ;
-  const inputPath = matches.args.input.value ;
+
+  let inputPath = matches.args.input.value ;
   console.log( "input path:" , inputPath ) ;
-  const rawContent = await readFile( inputPath ) ;
-  //const rawContent = "## Test\n" ;
-  let structuredDocument = bookSource.parse( rawContent ) ;
-  console.log( "structuredDocument" , structuredDocument ) ;
+  inputPath = await invoke( 'resolve_cli_path' , { input: inputPath } ) ;
+  // Resolve the path (relative pass are forbidden)
+  //inputPath = await resolve( inputPath ) ;
+  console.log( "resolved input path:" , inputPath ) ;
+  
+  const rawContent = await readTextFile( inputPath ) ;
+  console.log( "rawContent:" , rawContent ) ;
+
+  const coreCss = await loadText( '/core.css' ) ;
+  const codeCss = await loadText( '/code.css' ) ;
+  console.log( "coreCss:" , coreCss ) ;
+
+  book_source_content.value = bookSource.bookSourceToHtml( rawContent , { coreCss, codeCss } ) ;
 }
 
-async function cliArgs() {
-  const matches = await getMatches() ;
-  console.log( "matches:" , matches ) ;
-}
-
-//cliArgs() ;
 test() ;
 
 </script>
 
 <template>
   <main class="container">
-    <h1>Hello</h1>
-
+    <div v-html="book_source_content"></div>
   </main>
 </template>
 
