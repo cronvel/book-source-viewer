@@ -24,7 +24,7 @@ async function loadText( path ) {
 
 
 
-async function test() {
+async function loadBookSource() {
   // Get the CWD, it's a Rust method created in src-tauri/src/lib.rs
   const cwd = await invoke( 'get_cwd' ) ;
   console.log( "CWD:" , cwd ) ;
@@ -45,12 +45,11 @@ async function test() {
 
   const coreCss = await loadText( '/core.css' ) ;
   const codeCss = await loadText( '/code.css' ) ;
-  console.log( "coreCss:" , coreCss ) ;
 
   book_source_content.value = bookSource.bookSourceToHtml( rawContent , { coreCss, codeCss } ) ;
 }
 
-test() ;
+loadBookSource() ;
 
 </script>
 
@@ -60,16 +59,6 @@ test() ;
   </main>
 </template>
 
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-
-</style>
 <style>
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;

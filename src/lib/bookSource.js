@@ -7,7 +7,7 @@ import highlight from 'highlight.js' ;
 
 export function bookSourceToHtml( rawContent , params = {} ) {
 	let structuredDocument = bookSource.parse( rawContent ) ;
-	console.log( "structuredDocument:" , structuredDocument ) ;
+	//console.log( "structuredDocument:" , structuredDocument ) ;
 
 	let html = renderHtml( structuredDocument , {
 		theme: new bookSource.Theme() ,
@@ -15,7 +15,7 @@ export function bookSourceToHtml( rawContent , params = {} ) {
 		codeCss: params.codeCss
 	} ) ;
 
-	console.log( "html:" , html ) ;
+	//console.log( "html:" , html ) ;
 	return html ;
 }
 
