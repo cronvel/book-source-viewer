@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "book-source-viewer",
-        "width": 800,
-        "height": 600
+        "title": "Book Source Viewer",
+        "width": 1024,
+        "height": 768
       }
     ],
     "security": {

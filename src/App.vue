@@ -73,9 +73,6 @@ test() ;
 <style>
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
 
   color: #0f0f0f;
   background-color: #f6f6f6;
@@ -87,13 +84,23 @@ test() ;
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  margin: 0;
+}
+
 .container {
   margin: 0;
-  padding-top: 10vh;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  text-align: center;
+}
+
+.book-source {
+  margin: auto;
+  /* Padding is mandatory to avoid margin collapse, e.g. on <h1> tags */
+  padding: 1em 2em;
+  max-width: 80em;
 }
 
 .logo {
