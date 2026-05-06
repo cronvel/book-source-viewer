@@ -8,8 +8,11 @@ import { open as openDialog } from '@tauri-apps/plugin-dialog';
 import * as bookSource from './lib/bookSource.js' ;
 import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 
+// Elements
 const bookSourceContainer = ref( null ) ;
-const bookSourceContent = ref( "<h2>Placeholder</h2>" ) ;
+
+const showOpenButton = ref( true ) ;
+const bookSourceContent = ref( '' ) ;
 
 
 
@@ -25,13 +28,14 @@ async function loadBookSourceFromCLIArgs() {
 		await loadBookSource( inputPath ) ;
 	}
 	else {
-		await loadBookSourceFromFileSelector() ;
+		showOpenButton.value = true ;
+		//await openBookSourceDialog() ;
 	}
 }
 
 
 
-async function loadBookSourceFromFileSelector() {
+async function openBookSourceDialog() {
 	const filePath = await openDialog( {
 		multiple: false,
 		filters: [
@@ -43,7 +47,13 @@ async function loadBookSourceFromFileSelector() {
 	} ) ;
 
 	console.log( "Dialog file:" , filePath ) ;
-	await loadBookSource( filePath ) ;
+
+	if ( filePath ) {
+		await loadBookSource( filePath ) ;
+	}
+	else {
+		clearBookSource() ;
+	}
 }
 
 
@@ -56,10 +66,12 @@ async function loadBookSource( inputPath ) {
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
+		showOpenButton.value = true ;
 		return ;
 	}
 
 	bookSourceContent.value = doc.html ;
+	showOpenButton.value = false ;
 
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
@@ -68,11 +80,27 @@ async function loadBookSource( inputPath ) {
 	fixMediaPaths( bookSourceContainer.value , doc.baseDir ) ;
 }
 
+
+
+function clearBookSource() {
+	bookSourceContent.value = '' ;
+	showOpenButton.value = true ;
+}
+
+
+
 loadBookSourceFromCLIArgs() ;
 </script>
 
 <template>
+	<menu class="menu-bar">
+		<button @click="openBookSourceDialog">Open</button>
+		<button @click="clearBookSource">Close</button>
+	</menu>
 	<main class="container">
+		<div v-if="showOpenButton" class="idle-big-menu">
+			<button @click="openBookSourceDialog">Open</button>
+		</div>
 		<div ref="bookSourceContainer" v-html="bookSourceContent"></div>
 	</main>
 </template>
@@ -95,9 +123,44 @@ body {
 	margin: 0;
 }
 
+.menu-bar {
+	position: fixed;
+	box-sizing: border-box;
+	width: 100vw;
+	margin: 0;
+	padding: 0.25em 1em;
+	background-color: #333;
+	display: flex;
+	flex-direction: row;
+	justify-content: end;
+	align-items: end;
+	gap: 0.5em;
+	opacity: 0;
+}
+
+.menu-bar:hover {
+	opacity: 100%;
+}
+
+.menu-bar button {
+	font-size: 0.6em;
+}
+
+.idle-big-menu {
+	margin: 0;
+	padding: 1em;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.idle-big-menu button {
+}
+
 .container {
 	margin: 0;
-	padding: 0;
+	/*padding: 1.5em 0 0 0;*/
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -108,22 +171,6 @@ body {
 	/* Padding is mandatory to avoid margin collapse, e.g. on <h1> tags */
 	padding: 1em 2em;
 	max-width: 80em;
-}
-
-.logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: 0.75s;
-}
-
-.logo.tauri:hover {
-	filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-	display: flex;
-	justify-content: center;
 }
 
 a {
@@ -149,6 +196,7 @@ button {
 	font-weight: 500;
 	font-family: inherit;
 	color: #0f0f0f;
+	outline: none;
 	background-color: #ffffff;
 	transition: border-color 0.25s;
 	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
@@ -161,14 +209,10 @@ button {
 button:hover {
 	border-color: #396cd8;
 }
+
 button:active {
 	border-color: #396cd8;
 	background-color: #e8e8e8;
-}
-
-input,
-button {
-	outline: none;
 }
 
 error {
@@ -199,5 +243,4 @@ error {
 		background-color: #0f0f0f69;
 	}
 }
-
 </style>

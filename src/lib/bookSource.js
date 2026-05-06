@@ -148,5 +148,5 @@ function renderHtml( structuredDocument , params = {} ) {
 	) ;
 
 	return structuredDocument.render( htmlRenderer ) ;
-} ;
+}
 
