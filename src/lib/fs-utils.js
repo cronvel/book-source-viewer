@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core" ;
 
 // Load a text file located in the 'public' directory
 export async function loadPublicText( filePath ) {
@@ -27,5 +28,24 @@ export function getDirectory( filePath ) {
 	if ( indexOf === -1 ) { return null ; }
 
 	return filePath.slice( 0 , indexOf ) ;
+}
+
+
+
+// Resolve the path
+export async function resolve( filePath ) {
+	return await invoke( 'resolve_cli_path' , { input: filePath } ) ;
+}
+
+
+
+// Is path absolute?
+export function isAbsolute( filePath ) {
+	return /^(?:[a-zA-Z]:[\\/]|[\\/]{2}|\/)/.test( filePath ) ;
+}
+
+// Rust version (but async)
+export async function isAbsolute_rust( filePath ) {
+	return await invoke( 'is_absolute' , { input: filePath } ) ;
 }
 

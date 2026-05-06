@@ -2,7 +2,7 @@ import * as fsUtils from './fs-utils.js'
 
 import * as bookSource from 'book-source' ;
 import HtmlRenderer from 'book-source-html-renderer' ;
-import kfgParse from '../externals/kfgParse.js' ;
+import { default as kfgParse } from '../externals/kfgParse.esm.js' ;
 import highlight from 'highlight.js' ;
 
 // Invoke Rust methods
@@ -17,7 +17,7 @@ import { readTextFile } from '@tauri-apps/plugin-fs' ;
 export async function load( inputPath ) {
 	// Resolve the path (relative pass are forbidden)
 	//inputPath = await resolve( inputPath ) ;
-	inputPath = await invoke( 'resolve_cli_path' , { input: inputPath } ) ;
+	inputPath = await fsUtils.resolve( inputPath ) ;
 	console.log( "resolved input path:" , inputPath ) ;
 
 
@@ -78,6 +78,35 @@ export async function load( inputPath ) {
 		default :
 			throw new Error( "Extension '" + extension + "' not supported" ) ;
 	}
+
+	if ( ! Array.isArray( package_.sources ) || ! package_.sources.length ) {
+		throw new Error( "No source specified in the package." ) ;
+	}
+
+	let basePath = fsUtils.getDirectory( inputPath ) ;
+
+	/*
+	for ( let sourcePath of package_.sources ) {
+		let sourceContent ,
+			fullPath = sourcePath ;
+
+		if ( ! path.isAbsolute( fullPath ) ) { fullPath = path.join( baseDir , fullPath ) ; }
+		if ( ! path.extname( fullPath ) ) { fullPath += '.bks' ; }
+
+		try {
+			sourceContent = fs.readFileSync( fullPath , 'utf8' ) ;
+		}
+		catch ( error ) {
+			throw new Error( "Error reading source file '" + sourcePath + "':" , error ) ;
+		}
+		if ( rawContent ) { rawContent += '\n' ; }
+		rawContent += sourceContent ;
+	}
+
+    var structuredDocument = bookSource.parse( rawContent , {
+        metadataParser: kungFig.parse
+    } ) ;
+    */
 
 	rawContent = await readTextFile( inputPath ) ;
 	//console.log( "rawContent:" , rawContent ) ;

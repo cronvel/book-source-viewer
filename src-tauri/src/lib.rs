@@ -24,6 +24,12 @@ fn resolve_cli_path(input: String) -> String {
     cwd.join(path).to_string_lossy().to_string()
 }
 
+#[tauri::command]
+fn is_absolute(input: String) -> bool {
+    let path = std::path::PathBuf::from(&input);
+    return path.is_absolute();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -33,7 +39,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             get_cwd,
-            resolve_cli_path
+            resolve_cli_path,
+            is_absolute
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
