@@ -6,10 +6,13 @@ import { invoke } from "@tauri-apps/api/core" ;
 import { getMatches } from '@tauri-apps/plugin-cli';
 
 import * as bookSource from './lib/bookSource.js' ;
+import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 
 let book_source_content = ref( "<h2>Placeholder</h2>" ) ;
 
-
+import { convertFileSrc } from "@tauri-apps/api/core";
+window.convertFileSrc = convertFileSrc ;
+console.log( "convertFileSrc:" , convertFileSrc ) ;
 
 async function loadBookSource() {
 	// Get the CWD, it's a Rust method created in src-tauri/src/lib.rs
@@ -23,7 +26,12 @@ async function loadBookSource() {
 	let inputPath = matches.args.input.value ;
 	console.log( "input path:" , inputPath ) ;
 
-	book_source_content.value = await bookSource.load( inputPath ) ;
+	let doc = await bookSource.load( inputPath ) ;
+	book_source_content.value = doc.html ;
+	setTimeout( () => {
+		let $element = document.querySelector( '#book-source-container' ) ;
+		fixMediaPaths( $element , doc.baseDir ) ;
+	} , 100 ) ;
 }
 
 loadBookSource() ;
@@ -32,7 +40,7 @@ loadBookSource() ;
 
 <template>
 	<main class="container">
-		<div v-html="book_source_content"></div>
+		<div id="book-source-container" v-html="book_source_content"></div>
 	</main>
 </template>
 

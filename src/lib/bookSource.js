@@ -5,16 +5,9 @@ import HtmlRenderer from 'book-source-html-renderer' ;
 import { default as kfgParse } from '../externals/kfgParse.esm.js' ;
 import highlight from 'highlight.js' ;
 
-// Invoke Rust methods
-import { invoke } from "@tauri-apps/api/core" ;
-// FS plugin
-import { readTextFile } from '@tauri-apps/plugin-fs' ;
-// Path resolver (FS method do not accept relative path)
-//import { resolve , join } from '@tauri-apps/api/path' ;
 
 
-
-export async function load( inputPath ) {
+export async function load( inputPath , params = {} ) {
 	// Resolve the path (relative pass are forbidden)
 	//inputPath = await resolve( inputPath ) ;
 	inputPath = await fsUtils.resolve( inputPath ) ;
@@ -24,6 +17,8 @@ export async function load( inputPath ) {
 	let package_ ,
 		rawContent = '' ,
 		isPackage = false ,
+		postFilters = [] ,
+		theme = null ,
 		baseDir = fsUtils.getDirectory( inputPath ) ,
 		extension = fsUtils.getExtension( inputPath ) ;
 
@@ -42,7 +37,7 @@ export async function load( inputPath ) {
 			let packageSourceText ;
 
 			try {
-				packageSourceText = await readTextFile( inputPath ) ;
+				packageSourceText = await fsUtils.readTextFile( inputPath ) ;
 			}
 			catch ( error ) {
 				throw new Error( "Can't read package source file: " + inputPath ) ;
@@ -61,7 +56,7 @@ export async function load( inputPath ) {
 			let packageSourceText ;
 
 			try {
-				packageSourceText = await readTextFile( inputPath ) ;
+				packageSourceText = await fsUtils.readTextFile( inputPath ) ;
 			}
 			catch ( error ) {
 				throw new Error( "Can't read package source file: " + inputPath ) ;
@@ -83,18 +78,15 @@ export async function load( inputPath ) {
 		throw new Error( "No source specified in the package." ) ;
 	}
 
-	let basePath = fsUtils.getDirectory( inputPath ) ;
-
-	/*
 	for ( let sourcePath of package_.sources ) {
 		let sourceContent ,
 			fullPath = sourcePath ;
 
-		if ( ! path.isAbsolute( fullPath ) ) { fullPath = path.join( baseDir , fullPath ) ; }
-		if ( ! path.extname( fullPath ) ) { fullPath += '.bks' ; }
+		if ( ! fsUtils.isAbsolute( fullPath ) ) { fullPath = fsUtils.join( baseDir , fullPath ) ; }
+		if ( ! fsUtils.getExtension( fullPath ) ) { fullPath += '.bks' ; }
 
 		try {
-			sourceContent = fs.readFileSync( fullPath , 'utf8' ) ;
+			sourceContent = await fsUtils.readTextFile( fullPath ) ;
 		}
 		catch ( error ) {
 			throw new Error( "Error reading source file '" + sourcePath + "':" , error ) ;
@@ -103,28 +95,37 @@ export async function load( inputPath ) {
 		rawContent += sourceContent ;
 	}
 
-    var structuredDocument = bookSource.parse( rawContent , {
-        metadataParser: kungFig.parse
-    } ) ;
-    */
+	console.log( "rawContent:" , rawContent ) ;
 
-	rawContent = await readTextFile( inputPath ) ;
-	//console.log( "rawContent:" , rawContent ) ;
+	const coreCss = await fsUtils.readPublicText( '/core.css' ) ;
+	const codeCss = await fsUtils.readPublicText( '/code.css' ) ;
 
-	const coreCss = await fsUtils.loadPublicText( '/core.css' ) ;
-	const codeCss = await fsUtils.loadPublicText( '/code.css' ) ;
+	// Post-filters
+	// Add package post-filters first, then command line post-filters
+	if ( Array.isArray( package_.postFilters ) ) { postFilters.push( ... package_.postFilters ) ; }
+	if ( Array.isArray( params.postFilters ) ) { postFilters.push( ... params.postFilters ) ; }
 
-	return bookSourceToHtml( rawContent , { coreCss, codeCss } ) ;
+	let html = bookSourceToHtml( rawContent , { coreCss, codeCss , postFilters , theme: package_.theme } ) ;
+
+	return { html , baseDir } ;
 }
 
 
 
 export function bookSourceToHtml( rawContent , params = {} ) {
-	let structuredDocument = bookSource.parse( rawContent ) ;
+	let structuredDocument = bookSource.parse( rawContent , {
+		metadataParser: kfgParse
+	} ) ;
+
+	if ( params.postFilters.length ) { structuredDocument.textPostFilter( postFilters ) ; }
+
+	let theme = params.theme || structuredDocument.theme ;
+	theme = ! theme || typeof theme !== 'object' ? new bookSource.Theme() : new bookSource.Theme( theme ) ;
+
 	//console.log( "structuredDocument:" , structuredDocument ) ;
 
 	let html = renderHtml( structuredDocument , {
-		theme: new bookSource.Theme() ,
+		theme ,
 		coreCss: params.coreCss ,
 		codeCss: params.codeCss
 	} ) ;
@@ -135,7 +136,7 @@ export function bookSourceToHtml( rawContent , params = {} ) {
 
 
 
-function renderHtml( structuredDocument , params = {} ) { // , package_ ) {
+function renderHtml( structuredDocument , params = {} ) {
 	var htmlRenderer = new HtmlRenderer(
 		params.theme ,
 		{

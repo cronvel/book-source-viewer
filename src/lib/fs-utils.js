@@ -1,23 +1,24 @@
+// Invoke Rust methods
 import { invoke } from "@tauri-apps/api/core" ;
-
-// Load a text file located in the 'public' directory
-export async function loadPublicText( filePath ) {
-	const text = await ( await fetch( filePath ) ).text() ;
-	return text ;
-}
+// Filesystem plugin
+import * as fs from '@tauri-apps/plugin-fs' ;
+// Node.js path module
+import * as path from "path-browserify" ;
 
 
 
-// Get the extension from a filename or file path, return empty string if none
-export function getExtension( filePath ) {
-	let match = filePath.match( /\.([^.]+)$/ ) ;
-	return match ? match[ 1 ].toLowerCase() : "" ;
-}
+// Path-related
+
+//export function isAbsolute( filePath ) { return /^(?:[a-zA-Z]:[\\/]|[\\/]{2}|\/)/.test( filePath ) ; }
+export function isAbsolute( filePath ) { return path.isAbsolute( filePath ) ; }
+export function join( ... args ) { return path.join( ... args ) ; }
 
 
+
+export function getDirectory( filePath ) { return path.dirname( filePath ) ; }
 
 // Get the directory of a path, it should be already resolved, return null if none
-export function getDirectory( filePath ) {
+export function getDirectory_deprecated( filePath ) {
 	// Normalize
 	filePath = filePath.replace( /\\/g , '/' ).replace( /\/+/g , '/' ) ;
 
@@ -32,6 +33,14 @@ export function getDirectory( filePath ) {
 
 
 
+// Get the extension from a filename or file path, return empty string if none
+export function getExtension( filePath ) {
+	let match = filePath.match( /\.([^.]+)$/ ) ;
+	return match ? match[ 1 ].toLowerCase() : "" ;
+}
+
+
+
 // Resolve the path
 export async function resolve( filePath ) {
 	return await invoke( 'resolve_cli_path' , { input: filePath } ) ;
@@ -39,13 +48,16 @@ export async function resolve( filePath ) {
 
 
 
-// Is path absolute?
-export function isAbsolute( filePath ) {
-	return /^(?:[a-zA-Z]:[\\/]|[\\/]{2}|\/)/.test( filePath ) ;
-}
+// File-related
 
-// Rust version (but async)
-export async function isAbsolute_rust( filePath ) {
-	return await invoke( 'is_absolute' , { input: filePath } ) ;
+// Read (ASYNC) a file as text
+export function readTextFile( filePath ) { return fs.readTextFile( filePath ) ; }
+
+
+
+// Load a text file located in the 'public' directory
+export async function readPublicText( filePath ) {
+	const text = await ( await fetch( filePath ) ).text() ;
+	return text ;
 }
 
