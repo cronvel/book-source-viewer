@@ -1,24 +1,19 @@
 <script setup>
-
-import { ref, computed } from "vue";
+import { ref , computed , nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core" ;
 // CLI plugin to retrieve args
 import { getMatches } from '@tauri-apps/plugin-cli';
+import { open as openDialog } from '@tauri-apps/plugin-dialog';
 
 import * as bookSource from './lib/bookSource.js' ;
 import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 
-let book_source_content = ref( "<h2>Placeholder</h2>" ) ;
+const bookSourceContainer = ref( null ) ;
+const bookSourceContent = ref( "<h2>Placeholder</h2>" ) ;
 
-import { convertFileSrc } from "@tauri-apps/api/core";
-window.convertFileSrc = convertFileSrc ;
-console.log( "convertFileSrc:" , convertFileSrc ) ;
 
-async function loadBookSource() {
-	// Get the CWD, it's a Rust method created in src-tauri/src/lib.rs
-	const cwd = await invoke( 'get_cwd' ) ;
-	console.log( "CWD:" , cwd ) ;
 
+async function loadBookSourceFromCLIArgs() {
 	// Get CLI args (for dev mode, npm requires triple -- after npm in order to pass the argument to the app)
 	const matches = await getMatches() ;
 	console.log( "matches:" , matches ) ;
@@ -26,21 +21,59 @@ async function loadBookSource() {
 	let inputPath = matches.args.input.value ;
 	console.log( "input path:" , inputPath ) ;
 
-	let doc = await bookSource.load( inputPath ) ;
-	book_source_content.value = doc.html ;
-	setTimeout( () => {
-		let $element = document.querySelector( '#book-source-container' ) ;
-		fixMediaPaths( $element , doc.baseDir ) ;
-	} , 100 ) ;
+	if ( inputPath ) {
+		await loadBookSource( inputPath ) ;
+	}
+	else {
+		await loadBookSourceFromFileSelector() ;
+	}
 }
 
-loadBookSource() ;
 
+
+async function loadBookSourceFromFileSelector() {
+	const filePath = await openDialog( {
+		multiple: false,
+		filters: [
+			{
+				name: 'BookSource',
+				extensions: ['bks', 'json', 'kfg']
+			}
+		]
+	} ) ;
+
+	console.log( "Dialog file:" , filePath ) ;
+	await loadBookSource( filePath ) ;
+}
+
+
+
+async function loadBookSource( inputPath ) {
+	let doc ;
+
+	try {
+		doc = await bookSource.load( inputPath ) ;
+	}
+	catch ( error ) {
+		bookSourceContent.value = "<error>" + error + "</error>" ;
+		return ;
+	}
+
+	bookSourceContent.value = doc.html ;
+
+	// Vue's nextTick() is triggered after the update
+	await nextTick() ;
+
+	// Now we can rebase all the media's URL
+	fixMediaPaths( bookSourceContainer.value , doc.baseDir ) ;
+}
+
+loadBookSourceFromCLIArgs() ;
 </script>
 
 <template>
 	<main class="container">
-		<div id="book-source-container" v-html="book_source_content"></div>
+		<div ref="bookSourceContainer" v-html="bookSourceContent"></div>
 	</main>
 </template>
 
@@ -138,8 +171,13 @@ button {
 	outline: none;
 }
 
-#greet-input {
-	margin-right: 5px;
+error {
+	display: block;
+	color: red;
+	background-color: #faa;
+	font-weight: bold;
+	font-size: 1.5em;
+	margin: 1.5em;
 }
 
 @media (prefers-color-scheme: dark) {
