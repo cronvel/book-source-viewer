@@ -1,9 +1,9 @@
 // Invoke Rust methods
-import { invoke } from "@tauri-apps/api/core" ;
+import { invoke } from '@tauri-apps/api/core' ;
 // Filesystem plugin
 import * as fs from '@tauri-apps/plugin-fs' ;
 // Node.js path module
-import * as path from "path-browserify" ;
+import * as path from 'path-browserify' ;
 
 
 
@@ -36,7 +36,7 @@ export function getDirectory_deprecated( filePath ) {
 // Get the extension from a filename or file path, return empty string if none
 export function getExtension( filePath ) {
 	let match = filePath.match( /\.([^.]+)$/ ) ;
-	return match ? match[ 1 ].toLowerCase() : "" ;
+	return match ? match[ 1 ].toLowerCase() : '' ;
 }
 
 

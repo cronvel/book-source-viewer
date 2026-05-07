@@ -1,4 +1,4 @@
-import * as fsUtils from './fs-utils.js'
+import * as fsUtils from './fsUtils.js'
 
 import * as bookSource from 'book-source' ;
 import HtmlRenderer from 'book-source-html-renderer' ;

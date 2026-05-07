@@ -15,6 +15,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-store": "^2.4.3",
     "book-source": "^0.3.11",
     "book-source-html-renderer": "^0.3.10",
     "highlight.js": "^11.11.1",

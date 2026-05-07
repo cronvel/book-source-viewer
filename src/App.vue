@@ -1,13 +1,14 @@
 <script setup>
-import { ref , computed , nextTick } from "vue";
-import { invoke } from "@tauri-apps/api/core" ;
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { ref , computed , nextTick } from 'vue' ;
+import { invoke } from '@tauri-apps/api/core' ;
+import { getCurrentWindow } from '@tauri-apps/api/window' ;
 
 // CLI plugin to retrieve args
-import { getMatches } from '@tauri-apps/plugin-cli';
-import { open as openDialog } from '@tauri-apps/plugin-dialog';
+import { getMatches } from '@tauri-apps/plugin-cli' ;
+import { open as openDialog } from '@tauri-apps/plugin-dialog' ;
 
 import * as bookSource from './lib/bookSource.js' ;
+import * as appStorage from './lib/appStorage.js' ;
 import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 
 // Elements
@@ -34,6 +35,10 @@ async function loadBookSourceFromCLIArgs() {
 	else {
 		showOpenButton.value = true ;
 		//await openBookSourceDialog() ;
+		let lastFile = appStorage.get( 'lastFile' ) ;
+		if ( lastFile ) {
+			await loadBookSource( lastFile ) ;
+		}
 	}
 }
 
@@ -81,6 +86,9 @@ async function loadBookSource( inputPath ) {
 
 	// Now we can rebase all the media's URL
 	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
+
+	appStore.set( 'lastFile' , currentDoc.fullPath ) ;
+	await appStore.save() ;
 }
 
 
@@ -100,7 +108,12 @@ function clearBookSource() {
 
 
 
-loadBookSourceFromCLIArgs() ;
+async function startup() {
+	await appStorage.load() ;
+	loadBookSourceFromCLIArgs() ;
+}
+
+startup() ;
 </script>
 
 <template>
