@@ -87,8 +87,8 @@ async function loadBookSource( inputPath ) {
 	// Now we can rebase all the media's URL
 	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
 
-	appStore.set( 'lastFile' , currentDoc.fullPath ) ;
-	await appStore.save() ;
+	appStorage.set( 'lastFile' , currentDoc.fullPath ) ;
+	await appStorage.save() ;
 }
 
 
