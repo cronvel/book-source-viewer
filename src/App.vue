@@ -94,8 +94,8 @@ loadBookSourceFromCLIArgs() ;
 
 <template>
 	<menu class="menu-bar">
-		<button @click="openBookSourceDialog">Open</button>
-		<button @click="clearBookSource">Close</button>
+		<button @click="openBookSourceDialog"><img src="./assets/open-file.svg" /></button>
+		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
 	<main class="container">
 		<div v-if="showOpenButton" class="idle-big-menu">
@@ -135,7 +135,7 @@ body {
 	justify-content: end;
 	align-items: end;
 	gap: 0.5em;
-	opacity: 0;
+	opacity: 100%;
 }
 
 .menu-bar:hover {
@@ -144,6 +144,13 @@ body {
 
 .menu-bar button {
 	font-size: 0.6em;
+	background-color: #eee;
+	padding: 0.2em;
+}
+
+.menu-bar button img {
+	display: block;
+	width: 2em;
 }
 
 .idle-big-menu {
