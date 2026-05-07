@@ -41,6 +41,15 @@ export function getExtension( filePath ) {
 
 
 
+// Get the file basename from a filename or file path (the part without the extension)
+export function getBasename( filePath ) {
+	let basename = path.basename( filePath ) ;
+	let extension = path.extname( basename ) ;
+	return extension.length ? basename.slice( 0 , - extension.length ) : basename ;
+}
+
+
+
 // Resolve the path
 export async function resolve( filePath ) {
 	return await invoke( 'resolve_cli_path' , { input: filePath } ) ;
@@ -57,7 +66,7 @@ export function readTextFile( filePath ) { return fs.readTextFile( filePath ) ; 
 
 // Load a text file located in the 'public' directory
 export async function readPublicText( filePath ) {
-	const text = await ( await fetch( filePath ) ).text() ;
+	let text = await ( await fetch( filePath ) ).text() ;
 	return text ;
 }
 

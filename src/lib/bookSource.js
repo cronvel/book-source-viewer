@@ -7,28 +7,24 @@ import highlight from 'highlight.js' ;
 
 
 
-export async function load( inputPath , params = {} ) {
+export async function load( fullPath , params = {} ) {
 	// Resolve the path (relative pass are forbidden)
-	//inputPath = await resolve( inputPath ) ;
-	inputPath = await fsUtils.resolve( inputPath ) ;
-	console.log( "resolved input path:" , inputPath ) ;
-
+	fullPath = await fsUtils.resolve( fullPath ) ;
+	//console.log( "resolved input path:" , fullPath ) ;
 
 	let package_ ,
 		rawContent = '' ,
 		isPackage = false ,
 		postFilters = [] ,
 		theme = null ,
-		baseDir = fsUtils.getDirectory( inputPath ) ,
-		extension = fsUtils.getExtension( inputPath ) ;
-
-	console.log( "extension:" , extension ) ;
-
+		baseName = fsUtils.getBasename( fullPath ) ,
+		baseDir = fsUtils.getDirectory( fullPath ) ,
+		extension = fsUtils.getExtension( fullPath ) ;
 
 	switch ( extension ) {
 		case 'bks' : {
             package_ = {
-                sources: [ inputPath ]
+                sources: [ fullPath ]
             } ;
 			break ;
 		}
@@ -37,10 +33,10 @@ export async function load( inputPath , params = {} ) {
 			let packageSourceText ;
 
 			try {
-				packageSourceText = await fsUtils.readTextFile( inputPath ) ;
+				packageSourceText = await fsUtils.readTextFile( fullPath ) ;
 			}
 			catch ( error ) {
-				throw new Error( "Can't read package source file: " + inputPath ) ;
+				throw new Error( "Can't read package source file: " + fullPath ) ;
 			}
 
 			try {
@@ -56,10 +52,10 @@ export async function load( inputPath , params = {} ) {
 			let packageSourceText ;
 
 			try {
-				packageSourceText = await fsUtils.readTextFile( inputPath ) ;
+				packageSourceText = await fsUtils.readTextFile( fullPath ) ;
 			}
 			catch ( error ) {
-				throw new Error( "Can't read package source file: " + inputPath ) ;
+				throw new Error( "Can't read package source file: " + fullPath ) ;
 			}
 
 			try {
@@ -95,7 +91,7 @@ export async function load( inputPath , params = {} ) {
 		rawContent += sourceContent ;
 	}
 
-	console.log( "rawContent:" , rawContent ) ;
+	//console.log( "rawContent:" , rawContent ) ;
 
 	const coreCss = await fsUtils.readPublicText( '/core.css' ) ;
 	const codeCss = await fsUtils.readPublicText( '/code.css' ) ;
@@ -107,7 +103,7 @@ export async function load( inputPath , params = {} ) {
 
 	let html = bookSourceToHtml( rawContent , { coreCss, codeCss , postFilters , theme: package_.theme } ) ;
 
-	return { html , baseDir } ;
+	return { fullPath , baseDir , baseName , html } ;
 }
 
 

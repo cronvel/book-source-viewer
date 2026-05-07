@@ -1,6 +1,8 @@
 <script setup>
 import { ref , computed , nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core" ;
+import { getCurrentWindow } from '@tauri-apps/api/window';
+
 // CLI plugin to retrieve args
 import { getMatches } from '@tauri-apps/plugin-cli';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
@@ -13,6 +15,8 @@ const bookSourceContainer = ref( null ) ;
 
 const showOpenButton = ref( true ) ;
 const bookSourceContent = ref( '' ) ;
+
+let currentDoc = null ;
 
 
 
@@ -46,8 +50,6 @@ async function openBookSourceDialog() {
 		]
 	} ) ;
 
-	console.log( "Dialog file:" , filePath ) ;
-
 	if ( filePath ) {
 		await loadBookSource( filePath ) ;
 	}
@@ -59,10 +61,8 @@ async function openBookSourceDialog() {
 
 
 async function loadBookSource( inputPath ) {
-	let doc ;
-
 	try {
-		doc = await bookSource.load( inputPath ) ;
+		currentDoc = await bookSource.load( inputPath ) ;
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
@@ -70,14 +70,25 @@ async function loadBookSource( inputPath ) {
 		return ;
 	}
 
-	bookSourceContent.value = doc.html ;
+	bookSourceContent.value = currentDoc.html ;
 	showOpenButton.value = false ;
+
+	// Seems to not work on Gnome
+	await getCurrentWindow().setTitle( "Book Source Viewer — " + currentDoc.baseName ) ;
 
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
 
 	// Now we can rebase all the media's URL
-	fixMediaPaths( bookSourceContainer.value , doc.baseDir ) ;
+	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
+}
+
+
+
+function reloadBookSource() {
+	if ( currentDoc ) {
+		return loadBookSource( currentDoc.fullPath ) ;
+	}
 }
 
 
@@ -95,6 +106,7 @@ loadBookSourceFromCLIArgs() ;
 <template>
 	<menu class="menu-bar">
 		<button @click="openBookSourceDialog"><img src="./assets/open-file.svg" /></button>
+		<button @click="reloadBookSource"><img src="./assets/reload.svg" /></button>
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
 	<main class="container">
@@ -119,27 +131,29 @@ loadBookSourceFromCLIArgs() ;
 	-webkit-text-size-adjust: 100%;
 }
 
-body {
+html, body, #app {
+	height: 100%;
 	margin: 0;
 }
 
+#app {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
 .menu-bar {
-	position: fixed;
 	box-sizing: border-box;
 	width: 100vw;
 	margin: 0;
 	padding: 0.25em 1em;
+	flex-shrink: 0;
 	background-color: #333;
 	display: flex;
 	flex-direction: row;
 	justify-content: end;
 	align-items: end;
 	gap: 0.5em;
-	opacity: 100%;
-}
-
-.menu-bar:hover {
-	opacity: 100%;
 }
 
 .menu-bar button {
@@ -163,11 +177,13 @@ body {
 }
 
 .idle-big-menu button {
+	font-size: 2em;
 }
 
 .container {
 	margin: 0;
-	/*padding: 1.5em 0 0 0;*/
+	flex: 1;
+	overflow: auto;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;

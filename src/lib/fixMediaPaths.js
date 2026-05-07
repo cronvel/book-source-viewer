@@ -6,7 +6,7 @@ export function fixMediaPaths( $element , baseDir ) {
 		if ( ! src || src.startsWith( 'http') || src.startsWith( 'asset:' ) ) { return ; }
 		let absolute = baseDir + '/' + src ;
 		let converted = convertFileSrc( absolute ) ;
-		console.log( "Converted media path from '" + src + "' to '" + converted + "'" ) ;
+		//console.log( "Converted media path from '" + src + "' to '" + converted + "'" ) ;
 		img.src = convertFileSrc( absolute ) ;
 	} ) ;
 }
