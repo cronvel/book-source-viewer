@@ -135,7 +135,7 @@ async function saveAsHtml() {
 	if ( ! filePath ) { return ; }
 
 	try {
-		await fsUtils.writeTextFile( filePath , currentDoc.html ) ;
+		await fsUtils.writeTextFile( filePath , currentDoc.standaloneHtml ) ;
 		await dialog( "File saved!" , { kind: 'info' } ) ;
 	}
 	catch ( error ) {

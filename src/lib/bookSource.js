@@ -13,7 +13,7 @@ export async function load( fullPath , params = {} ) {
 	//console.log( "resolved input path:" , fullPath ) ;
 
 	let package_ ,
-		rawContent = '' ,
+		bks = '' ,
 		isPackage = false ,
 		postFilters = [] ,
 		theme = null ,
@@ -87,12 +87,13 @@ export async function load( fullPath , params = {} ) {
 		catch ( error ) {
 			throw new Error( "Error reading source file '" + sourcePath + "':" , error ) ;
 		}
-		if ( rawContent ) { rawContent += '\n' ; }
-		rawContent += sourceContent ;
+		if ( bks ) { bks += '\n' ; }
+		bks += sourceContent ;
 	}
 
-	//console.log( "rawContent:" , rawContent ) ;
+	//console.log( "bks:" , bks ) ;
 
+	const standaloneCss = await fsUtils.readPublicText( '/standalone.css' ) ;
 	const coreCss = await fsUtils.readPublicText( '/core.css' ) ;
 	const codeCss = await fsUtils.readPublicText( '/code.css' ) ;
 
@@ -101,33 +102,56 @@ export async function load( fullPath , params = {} ) {
 	if ( Array.isArray( package_.postFilters ) ) { postFilters.push( ... package_.postFilters ) ; }
 	if ( Array.isArray( params.postFilters ) ) { postFilters.push( ... params.postFilters ) ; }
 
-	let html = bookSourceToHtml( rawContent , { coreCss, codeCss , postFilters , theme: package_.theme } ) ;
+	let data = {
+		fullPath ,
+		baseDir ,
+		baseName ,
+		bks ,
+		standaloneCss ,
+		coreCss ,
+		codeCss ,
+		postFilters ,
+		theme: package_.theme ,
+		html: '' ,
+		standaloneHtml: '' ,
+	} ;
 
-	return { fullPath , baseDir , baseName , html } ;
+	bookSourceToHtml( data , true ) ;
+
+	return data ;
 }
 
 
 
-export function bookSourceToHtml( rawContent , params = {} ) {
-	let structuredDocument = bookSource.parse( rawContent , {
+export function bookSourceToHtml( data , renderStandalone = false ) {
+	let structuredDocument = bookSource.parse( data.bks , {
 		metadataParser: kfgParse
 	} ) ;
 
-	if ( params.postFilters.length ) { structuredDocument.textPostFilter( params.postFilters ) ; }
+	if ( data.postFilters.length ) { structuredDocument.textPostFilter( data.postFilters ) ; }
 
-	let theme = params.theme || structuredDocument.theme ;
+	let theme = data.theme || structuredDocument.theme ;
 	theme = ! theme || typeof theme !== 'object' ? new bookSource.Theme() : new bookSource.Theme( theme ) ;
 
 	//console.log( "structuredDocument:" , structuredDocument ) ;
 
-	let html = renderHtml( structuredDocument , {
+	data.html = renderHtml( structuredDocument , {
 		theme ,
-		coreCss: params.coreCss ,
-		codeCss: params.codeCss
+		coreCss: data.coreCss ,
+		codeCss: data.codeCss
 	} ) ;
 
-	//console.log( "html:" , html ) ;
-	return html ;
+	if ( renderStandalone ) {
+		data.standaloneHtml = renderStandaloneHtml( structuredDocument , {
+			theme ,
+			standaloneCss: data.standaloneCss ,
+			coreCss: data.coreCss ,
+			codeCss: data.codeCss ,
+		} ) ;
+	}
+
+	//console.log( "html:" , data.html ) ;
+	return data.html ;
 }
 
 
@@ -137,6 +161,23 @@ function renderHtml( structuredDocument , params = {} ) {
 		params.theme ,
 		{
 			shipCss: true ,
+			coreCss: params.coreCss ,
+			codeCss: params.codeCss ,
+			codeHighlighter: ( text , lang ) => highlight.highlight( text , { language: lang } ).value
+		}
+	) ;
+
+	return structuredDocument.render( htmlRenderer ) ;
+}
+
+
+
+function renderStandaloneHtml( structuredDocument , params = {} ) {
+	var htmlRenderer = new HtmlRenderer(
+		params.theme ,
+		{
+			standalone: true ,
+			standaloneCss: params.standaloneCss ,
 			coreCss: params.coreCss ,
 			codeCss: params.codeCss ,
 			codeHighlighter: ( text , lang ) => highlight.highlight( text , { language: lang } ).value
