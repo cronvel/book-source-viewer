@@ -113,7 +113,7 @@ export function bookSourceToHtml( rawContent , params = {} ) {
 		metadataParser: kfgParse
 	} ) ;
 
-	if ( params.postFilters.length ) { structuredDocument.textPostFilter( postFilters ) ; }
+	if ( params.postFilters.length ) { structuredDocument.textPostFilter( params.postFilters ) ; }
 
 	let theme = params.theme || structuredDocument.theme ;
 	theme = ! theme || typeof theme !== 'object' ? new bookSource.Theme() : new bookSource.Theme( theme ) ;

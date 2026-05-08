@@ -8,10 +8,12 @@ import { getMatches } from '@tauri-apps/plugin-cli' ;
 import { open as openDialog } from '@tauri-apps/plugin-dialog' ;
 
 import * as bookSource from './lib/bookSource.js' ;
+import * as fsUtils from './lib/fsUtils.js' ;
 import * as appStorage from './lib/appStorage.js' ;
 import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 
 // Elements
+const mainContainer = ref( null ) ;
 const bookSourceContainer = ref( null ) ;
 
 const showOpenButton = ref( true ) ;
@@ -45,8 +47,12 @@ async function loadBookSourceFromCLIArgs() {
 
 
 async function openBookSourceDialog() {
+	let lastFile = appStorage.get( 'lastFile' ) ;
+	let defaultPath = lastFile ? fsUtils.getDirectory( lastFile ) : null ;
+
 	const filePath = await openDialog( {
 		multiple: false,
+		defaultPath ,
 		filters: [
 			{
 				name: 'BookSource',
@@ -58,19 +64,17 @@ async function openBookSourceDialog() {
 	if ( filePath ) {
 		await loadBookSource( filePath ) ;
 	}
-	else {
-		clearBookSource() ;
-	}
 }
 
 
 
-async function loadBookSource( inputPath ) {
+async function loadBookSource( inputPath , noScrollTop ) {
 	try {
 		currentDoc = await bookSource.load( inputPath ) ;
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
+		console.error( error ) ;
 		showOpenButton.value = true ;
 		return ;
 	}
@@ -78,24 +82,31 @@ async function loadBookSource( inputPath ) {
 	bookSourceContent.value = currentDoc.html ;
 	showOpenButton.value = false ;
 
-	// Seems to not work on Gnome
-	await getCurrentWindow().setTitle( "Book Source Viewer — " + currentDoc.baseName ) ;
-
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
 
 	// Now we can rebase all the media's URL
 	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
 
+	if ( ! noScrollTop ) {
+		// There is something in the flex layout that causes the scroll=0 to be in the middle of the element
+		mainContainer.value.scrollTop = - mainContainer.value.scrollHeight ;
+		// Sometime the DOM is not updated fast enough
+		setTimeout( () => mainContainer.value.scrollTop = - mainContainer.value.scrollHeight , 50 ) ;
+	}
+
 	appStorage.set( 'lastFile' , currentDoc.fullPath ) ;
 	await appStorage.save() ;
+
+	// Seems to not work on Gnome
+	await getCurrentWindow().setTitle( "Book Source Viewer — " + currentDoc.baseName ) ;
 }
 
 
 
 function reloadBookSource() {
 	if ( currentDoc ) {
-		return loadBookSource( currentDoc.fullPath ) ;
+		return loadBookSource( currentDoc.fullPath , true ) ;
 	}
 }
 
@@ -122,7 +133,7 @@ startup() ;
 		<button @click="reloadBookSource"><img src="./assets/reload.svg" /></button>
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
-	<main class="container">
+	<main ref="mainContainer" class="container">
 		<div v-if="showOpenButton" class="idle-big-menu">
 			<button @click="openBookSourceDialog">Open</button>
 		</div>
