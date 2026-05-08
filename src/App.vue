@@ -5,7 +5,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window' ;
 
 // CLI plugin to retrieve args
 import { getMatches } from '@tauri-apps/plugin-cli' ;
-import { open as openDialog } from '@tauri-apps/plugin-dialog' ;
+import { message as dialog , open as openDialog , save as saveDialog } from '@tauri-apps/plugin-dialog' ;
 
 import * as bookSource from './lib/bookSource.js' ;
 import * as fsUtils from './lib/fsUtils.js' ;
@@ -71,6 +71,7 @@ async function openBookSourceDialog() {
 async function loadBookSource( inputPath , noScrollTop ) {
 	try {
 		currentDoc = await bookSource.load( inputPath ) ;
+		//console.log( "HTML:" , currentDoc.html ) ;
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
@@ -85,15 +86,10 @@ async function loadBookSource( inputPath , noScrollTop ) {
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
 
+	if ( ! noScrollTop ) { mainContainer.value.scrollTop = 0 ; }
+
 	// Now we can rebase all the media's URL
 	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
-
-	if ( ! noScrollTop ) {
-		// There is something in the flex layout that causes the scroll=0 to be in the middle of the element
-		mainContainer.value.scrollTop = - mainContainer.value.scrollHeight ;
-		// Sometime the DOM is not updated fast enough
-		setTimeout( () => mainContainer.value.scrollTop = - mainContainer.value.scrollHeight , 50 ) ;
-	}
 
 	appStorage.set( 'lastFile' , currentDoc.fullPath ) ;
 	await appStorage.save() ;
@@ -119,6 +115,43 @@ function clearBookSource() {
 
 
 
+// TODO: the HTML here is not stand-alone, currentDoc should probably contains the stand-alone version too
+async function saveAsHtml() {
+	if ( ! currentDoc ) { return ; }
+
+	let lastFile = appStorage.get( 'lastFile' ) ;
+	let defaultPath = lastFile ? fsUtils.getDirectory( lastFile ) : null ;
+
+	const filePath = await saveDialog( {
+		defaultPath ,
+		filters: [
+			{
+				name: 'HTML',
+				extensions: ['html']
+			}
+		]
+	} ) ;
+
+	if ( ! filePath ) { return ; }
+
+	try {
+		await fsUtils.writeTextFile( filePath , currentDoc.html ) ;
+		await dialog( "File saved!" , { kind: 'info' } ) ;
+	}
+	catch ( error ) {
+		await dialog( "Error saving the file: " + error , { kind: 'error' } ) ;
+	}
+}
+
+
+
+function printBookSource() {
+	if ( ! currentDoc ) { return ; }
+	window.print() ;
+}
+
+
+
 async function startup() {
 	await appStorage.load() ;
 	loadBookSourceFromCLIArgs() ;
@@ -131,9 +164,11 @@ startup() ;
 	<menu class="menu-bar">
 		<button @click="openBookSourceDialog"><img src="./assets/open-file.svg" /></button>
 		<button @click="reloadBookSource"><img src="./assets/reload.svg" /></button>
+		<button @click="saveAsHtml"><img src="./assets/save.svg" /></button>
+		<button @click="printBookSource"><img src="./assets/print.svg" /></button>
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
-	<main ref="mainContainer" class="container">
+	<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
 		<div v-if="showOpenButton" class="idle-big-menu">
 			<button @click="openBookSourceDialog">Open</button>
 		</div>
@@ -210,6 +245,9 @@ html, body, #app {
 	overflow: auto;
 	display: flex;
 	flex-direction: column;
+}
+
+.container.centered {
 	justify-content: center;
 }
 
@@ -288,6 +326,29 @@ error {
 	}
 	button:active {
 		background-color: #0f0f0f69;
+	}
+}
+
+@page {
+	size: A4;
+	margin: 10mm;
+}
+
+@media print {
+	html, body, #app, container {
+		display: block;
+		overflow: visible;
+		visibility: visible;
+		height: auto !important;
+	}
+
+	.menu-bar {
+		display: none;
+		visibility: hidden;
+	}
+
+	.book-source {
+		font-size: 8pt !important;
 	}
 }
 </style>

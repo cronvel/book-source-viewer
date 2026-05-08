@@ -12,6 +12,8 @@
     "store:default",
     "fs:default",
     "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-app-write",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$HOME/**" }]

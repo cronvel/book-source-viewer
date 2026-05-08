@@ -61,6 +61,8 @@ export async function resolve( filePath ) {
 
 // Read (ASYNC) a file as text
 export function readTextFile( filePath ) { return fs.readTextFile( filePath ) ; }
+// Write (ASYNC) text in a file
+export function writeTextFile( filePath , content ) { return fs.writeTextFile( filePath , content ) ; }
 
 
 
