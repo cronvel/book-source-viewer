@@ -15,7 +15,8 @@ export async function load( fullPath , params = {} ) {
 	let package_ ,
 		bks = '' ,
 		isPackage = false ,
-		postFilters = [] ,
+		textPostFilters = [] ,
+		postProcess = {} ,
 		theme = null ,
 		baseName = fsUtils.getBasename( fullPath ) ,
 		baseDir = fsUtils.getDirectory( fullPath ) ,
@@ -97,10 +98,15 @@ export async function load( fullPath , params = {} ) {
 	const coreCss = await fsUtils.readPublicText( '/core.css' ) ;
 	const codeCss = await fsUtils.readPublicText( '/code.css' ) ;
 
-	// Post-filters
-	// Add package post-filters first, then command line post-filters
-	if ( Array.isArray( package_.postFilters ) ) { postFilters.push( ... package_.postFilters ) ; }
-	if ( Array.isArray( params.postFilters ) ) { postFilters.push( ... params.postFilters ) ; }
+	// Text post-filters
+	// Add package text post-filters first, then command line text post-filters
+	if ( Array.isArray( package_.textPostFilters ) ) { textPostFilters.push( ... package_.textPostFilters ) ; }
+	if ( Array.isArray( params.textPostFilters ) ) { textPostFilters.push( ... params.textPostFilters ) ; }
+
+	// Post-process
+	// Add package post-process first, then command line post-process
+	if ( package_.postProcess && typeof package_.postProcess === 'object' ) { Object.assign( postProcess , package_.postProcess ) ; }
+    if ( params.postProcess && typeof params.postProcess === 'object' ) { Object.assign( postProcess , params.postProcess ) ; }
 
 	let data = {
 		fullPath ,
@@ -110,7 +116,8 @@ export async function load( fullPath , params = {} ) {
 		standaloneCss ,
 		coreCss ,
 		codeCss ,
-		postFilters ,
+		textPostFilters ,
+		postProcess ,
 		theme: package_.theme ,
 		html: '' ,
 		standaloneHtml: '' ,
@@ -128,7 +135,11 @@ export function bookSourceToHtml( data , renderStandalone = false ) {
 		metadataParser: kfgParse
 	} ) ;
 
-	if ( data.postFilters.length ) { structuredDocument.textPostFilter( data.postFilters ) ; }
+	// Text post-filters
+	if ( data.textPostFilters.length ) { structuredDocument.textPostFilter( data.textPostFilters ) ; }
+
+	// Post-process
+	if ( Object.keys( data.postProcess ).length ) { structuredDocument.postProcess( data.postProcess ) ; }
 
 	let theme = data.theme || structuredDocument.theme ;
 	theme = ! theme || typeof theme !== 'object' ? new bookSource.Theme() : new bookSource.Theme( theme ) ;
@@ -138,7 +149,8 @@ export function bookSourceToHtml( data , renderStandalone = false ) {
 	data.html = renderHtml( structuredDocument , {
 		theme ,
 		coreCss: data.coreCss ,
-		codeCss: data.codeCss
+		codeCss: data.codeCss ,
+		idAttribute: true
 	} ) ;
 
 	if ( renderStandalone ) {
@@ -147,6 +159,7 @@ export function bookSourceToHtml( data , renderStandalone = false ) {
 			standaloneCss: data.standaloneCss ,
 			coreCss: data.coreCss ,
 			codeCss: data.codeCss ,
+			idAttribute: true
 		} ) ;
 	}
 
@@ -163,6 +176,7 @@ function renderHtml( structuredDocument , params = {} ) {
 			shipCss: true ,
 			coreCss: params.coreCss ,
 			codeCss: params.codeCss ,
+			idAttribute: params.idAttribute ,
 			codeHighlighter: ( text , lang ) => highlight.highlight( text , { language: lang } ).value
 		}
 	) ;
@@ -180,6 +194,7 @@ function renderStandaloneHtml( structuredDocument , params = {} ) {
 			standaloneCss: params.standaloneCss ,
 			coreCss: params.coreCss ,
 			codeCss: params.codeCss ,
+			idAttribute: params.idAttribute ,
 			codeHighlighter: ( text , lang ) => highlight.highlight( text , { language: lang } ).value
 		}
 	) ;

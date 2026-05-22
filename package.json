@@ -16,8 +16,8 @@
     "@tauri-apps/plugin-fs": "^2.5.0",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-store": "^2.4.3",
-    "book-source": "^0.3.11",
-    "book-source-html-renderer": "^0.3.10",
+    "book-source": "^0.3.15",
+    "book-source-html-renderer": "^0.3.12",
     "highlight.js": "^11.11.1",
     "path-browserify": "^1.0.1",
     "vue": "^3.5.13"
