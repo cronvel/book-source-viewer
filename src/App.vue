@@ -174,13 +174,15 @@ startup() ;
 		<button @click="printBookSource"><img src="./assets/print.svg" /></button>
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
-	<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
-		<div v-if="showOpenButton" class="idle-big-menu">
-			<button @click="openBookSourceDialog">Open</button>
-		</div>
-		<nav ref="summaryMenu" v-if="showSummaryMenu" v-html="summaryMenuContent"></nav>
-		<div ref="bookSourceContainer" v-html="bookSourceContent"></div>
-	</main>
+	<div class="layout">
+		<nav ref="summaryMenu" class="toc" v-if="showSummaryMenu" v-html="summaryMenuContent"></nav>
+		<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
+			<div v-if="showOpenButton" class="idle-big-menu">
+				<button @click="openBookSourceDialog">Open</button>
+			</div>
+			<div ref="bookSourceContainer" v-html="bookSourceContent"></div>
+		</main>
+	</div>
 </template>
 
 <style>
@@ -209,17 +211,18 @@ html, body, #app {
 }
 
 .menu-bar {
-	box-sizing: border-box;
-	width: 100vw;
-	margin: 0;
-	padding: 0.25em 1em;
 	flex-shrink: 0;
-	background-color: #333;
+
 	display: flex;
 	flex-direction: row;
 	justify-content: end;
 	align-items: end;
 	gap: 0.5em;
+	box-sizing: border-box;
+	width: 100vw;
+	margin: 0;
+	padding: 0.25em 1em;
+	background-color: #333;
 }
 
 .menu-bar button {
@@ -234,24 +237,72 @@ html, body, #app {
 }
 
 .idle-big-menu {
-	margin: 0;
-	padding: 1em;
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
+	margin: 0;
+	padding: 1em;
 }
 
 .idle-big-menu button {
 	font-size: 2em;
 }
 
-.container {
-	margin: 0;
+.layout {
 	flex: 1;
-	overflow: auto;
+
+	display: flex;
+	flex-direction: rows;
+	gap: 0;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.toc {
+	flex-grow: 1;
+	flex-shrink: 5;
+
+	position: sticky;
+	top: 0;
+	box-sizing: border-box;
+	min-width: 10em;
+	max-width: max-content;
+	height: 100%;
+	overflow-y: auto;
+	padding: 0.5em;
+	border-right: 1px solid #44a;
+	background-color: #88d;
+}
+
+.toc ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.toc ul ul {
+  padding-left: 0.8em;
+}
+
+.toc a {
+  text-decoration: none;
+  color: #333;
+}
+
+.toc a:hover {
+  text-decoration: underline;
+}
+
+.container {
+	flex-grow: 0;
+	flex-shrink: 1;
+	flex-basis: content;
+
 	display: flex;
 	flex-direction: column;
+	box-sizing: border-box;
+	margin: 0;
+	overflow-y: auto;
 }
 
 .container.centered {
