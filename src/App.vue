@@ -18,6 +18,9 @@ const bookSourceContainer = ref( null ) ;
 
 const showOpenButton = ref( true ) ;
 const bookSourceContent = ref( '' ) ;
+const showSummaryMenu = ref( true ) ;
+const summaryMenu = ref( null ) ;
+const summaryMenuContent = ref( '' ) ;
 
 let currentDoc = null ;
 
@@ -75,12 +78,14 @@ async function loadBookSource( inputPath , noScrollTop ) {
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
+		summaryMenuContent.value = '' ;
 		console.error( error ) ;
 		showOpenButton.value = true ;
 		return ;
 	}
 
 	bookSourceContent.value = currentDoc.html ;
+	summaryMenuContent.value = currentDoc.summaryMenuHtml ;
 	showOpenButton.value = false ;
 
 	// Vue's nextTick() is triggered after the update
@@ -110,6 +115,7 @@ function reloadBookSource() {
 
 function clearBookSource() {
 	bookSourceContent.value = '' ;
+	summaryMenuContent.value = '' ;
 	showOpenButton.value = true ;
 }
 
@@ -172,6 +178,7 @@ startup() ;
 		<div v-if="showOpenButton" class="idle-big-menu">
 			<button @click="openBookSourceDialog">Open</button>
 		</div>
+		<nav ref="summaryMenu" v-if="showSummaryMenu" v-html="summaryMenuContent"></nav>
 		<div ref="bookSourceContainer" v-html="bookSourceContent"></div>
 	</main>
 </template>

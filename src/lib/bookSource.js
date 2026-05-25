@@ -119,8 +119,10 @@ export async function load( fullPath , params = {} ) {
 		textPostFilters ,
 		postProcess ,
 		theme: package_.theme ,
+		structuredDocument: null ,
 		html: '' ,
-		standaloneHtml: '' ,
+		summaryMenuHtml: '' ,
+		standaloneHtml: ''
 	} ;
 
 	bookSourceToHtml( data , true ) ;
@@ -131,30 +133,32 @@ export async function load( fullPath , params = {} ) {
 
 
 export function bookSourceToHtml( data , renderStandalone = false ) {
-	let structuredDocument = bookSource.parse( data.bks , {
+	data.structuredDocument = bookSource.parse( data.bks , {
 		metadataParser: kfgParse
 	} ) ;
 
 	// Text post-filters
-	if ( data.textPostFilters.length ) { structuredDocument.textPostFilter( data.textPostFilters ) ; }
+	if ( data.textPostFilters.length ) { data.structuredDocument.textPostFilter( data.textPostFilters ) ; }
 
 	// Post-process
-	if ( Object.keys( data.postProcess ).length ) { structuredDocument.postProcess( data.postProcess ) ; }
+	if ( Object.keys( data.postProcess ).length ) { data.structuredDocument.postProcess( data.postProcess ) ; }
 
-	let theme = data.theme || structuredDocument.theme ;
+	let theme = data.theme || data.structuredDocument.theme ;
 	theme = ! theme || typeof theme !== 'object' ? new bookSource.Theme() : new bookSource.Theme( theme ) ;
 
-	//console.log( "structuredDocument:" , structuredDocument ) ;
+	//console.log( "structuredDocument:" , data.structuredDocument ) ;
 
-	data.html = renderHtml( structuredDocument , {
+	data.html = renderHtml( data.structuredDocument , {
 		theme ,
 		coreCss: data.coreCss ,
 		codeCss: data.codeCss ,
 		idAttribute: true
 	} ) ;
 
+	data.summaryMenuHtml = renderSummaryMenuHtml( data.structuredDocument , { theme } ) ;
+
 	if ( renderStandalone ) {
-		data.standaloneHtml = renderStandaloneHtml( structuredDocument , {
+		data.standaloneHtml = renderStandaloneHtml( data.structuredDocument , {
 			theme ,
 			standaloneCss: data.standaloneCss ,
 			coreCss: data.coreCss ,
@@ -200,5 +204,19 @@ function renderStandaloneHtml( structuredDocument , params = {} ) {
 	) ;
 
 	return structuredDocument.render( htmlRenderer ) ;
+}
+
+
+
+function renderSummaryMenuHtml( structuredDocument , params = {} ) {
+	var htmlRenderer = new HtmlRenderer(
+		params.theme ,
+		{
+			shipCss: false ,
+			noContainer: true
+		}
+	) ;
+
+	return structuredDocument.render( htmlRenderer , 'summary' ) ;
 }
 
