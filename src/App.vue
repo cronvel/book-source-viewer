@@ -1,4 +1,5 @@
 <script setup>
+import TableOfContents from './TableOfContents.vue' ;
 import { ref , computed , nextTick } from 'vue' ;
 import { invoke } from '@tauri-apps/api/core' ;
 import { getCurrentWindow } from '@tauri-apps/api/window' ;
@@ -20,7 +21,7 @@ const showOpenButton = ref( true ) ;
 const bookSourceContent = ref( '' ) ;
 const showToc = ref( true ) ;
 const toc = ref( null ) ;
-const tocContent = ref( '' ) ;
+const tocContent = ref( [] ) ;
 
 let currentDoc = null ;
 
@@ -78,14 +79,14 @@ async function loadBookSource( inputPath , noScrollTop ) {
 	}
 	catch ( error ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
-		tocContent.value = '' ;
+		tocContent.value = [] ;
 		console.error( error ) ;
 		showOpenButton.value = true ;
 		return ;
 	}
 
 	bookSourceContent.value = currentDoc.html ;
-	tocContent.value = currentDoc.tocHtml ;
+	tocContent.value = currentDoc.structuredDocument.toc || [] ;
 	showOpenButton.value = false ;
 
 	// Vue's nextTick() is triggered after the update
@@ -115,13 +116,12 @@ function reloadBookSource() {
 
 function clearBookSource() {
 	bookSourceContent.value = '' ;
-	tocContent.value = '' ;
+	tocContent.value = [] ;
 	showOpenButton.value = true ;
 }
 
 
 
-// TODO: the HTML here is not stand-alone, currentDoc should probably contains the stand-alone version too
 async function saveAsHtml() {
 	if ( ! currentDoc ) { return ; }
 
@@ -175,7 +175,9 @@ startup() ;
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
 	<div class="layout">
-		<nav ref="toc" class="toc" v-if="showToc" v-html="tocContent"></nav>
+		<nav ref="toc" class="toc" v-if="showToc">
+			<TableOfContents :items="tocContent" />
+		</nav>
 		<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
 			<div v-if="showOpenButton" class="idle-big-menu">
 				<button @click="openBookSourceDialog">Open</button>
@@ -273,24 +275,6 @@ html, body, #app {
 	padding: 0.5em;
 	border-right: 1px solid #44a;
 	background-color: #88d;
-}
-
-.toc ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.toc ul ul {
-  padding-left: 0.8em;
-}
-
-.toc a {
-  text-decoration: none;
-  color: #333;
-}
-
-.toc a:hover {
-  text-decoration: underline;
 }
 
 .container {
