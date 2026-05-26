@@ -121,7 +121,7 @@ export async function load( fullPath , params = {} ) {
 		theme: package_.theme ,
 		structuredDocument: null ,
 		html: '' ,
-		summaryMenuHtml: '' ,
+		tocHtml: '' ,
 		standaloneHtml: ''
 	} ;
 
@@ -155,7 +155,7 @@ export function bookSourceToHtml( data , renderStandalone = false ) {
 		idAttribute: true
 	} ) ;
 
-	data.summaryMenuHtml = renderSummaryMenuHtml( data.structuredDocument , { theme } ) ;
+	data.tocHtml = renderTocHtml( data.structuredDocument , { theme } ) ;
 
 	if ( renderStandalone ) {
 		data.standaloneHtml = renderStandaloneHtml( data.structuredDocument , {
@@ -208,7 +208,7 @@ function renderStandaloneHtml( structuredDocument , params = {} ) {
 
 
 
-function renderSummaryMenuHtml( structuredDocument , params = {} ) {
+function renderTocHtml( structuredDocument , params = {} ) {
 	var htmlRenderer = new HtmlRenderer(
 		params.theme ,
 		{
@@ -217,6 +217,6 @@ function renderSummaryMenuHtml( structuredDocument , params = {} ) {
 		}
 	) ;
 
-	return structuredDocument.render( htmlRenderer , 'summary' ) ;
+	return structuredDocument.render( htmlRenderer , 'toc' ) ;
 }
 
