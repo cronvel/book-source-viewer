@@ -22,7 +22,7 @@ const bookSourceContent = ref( '' ) ;
 const showToc = ref( true ) ;
 const toc = ref( null ) ;
 const tocContent = ref( [] ) ;
-const docNumber = ref( 0 ) ;
+const templateCacheBreaker = ref( 0 ) ;
 
 let currentDoc = null ;
 
@@ -74,7 +74,7 @@ async function openBookSourceDialog() {
 
 
 async function loadBookSource( inputPath , isReload = false ) {
-	if ( ! isReload ) { docNumber.value ++ ; }
+	if ( ! isReload ) { templateCacheBreaker.value ++ ; }
 
 	try {
 		currentDoc = await bookSource.load( inputPath ) ;
@@ -179,7 +179,7 @@ startup() ;
 	</menu>
 	<div class="layout">
 		<nav ref="toc" class="toc" v-if="showToc">
-			<TableOfContents :key="docNumber" :items="tocContent" />
+			<TableOfContents :key="templateCacheBreaker" :items="tocContent" />
 		</nav>
 		<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
 			<div v-if="showOpenButton" class="idle-big-menu">
