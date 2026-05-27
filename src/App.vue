@@ -22,6 +22,7 @@ const bookSourceContent = ref( '' ) ;
 const showToc = ref( true ) ;
 const toc = ref( null ) ;
 const tocContent = ref( [] ) ;
+const docNumber = ref( 0 ) ;
 
 let currentDoc = null ;
 
@@ -72,7 +73,9 @@ async function openBookSourceDialog() {
 
 
 
-async function loadBookSource( inputPath , noScrollTop ) {
+async function loadBookSource( inputPath , isReload = false ) {
+	if ( ! isReload ) { docNumber.value ++ ; }
+
 	try {
 		currentDoc = await bookSource.load( inputPath ) ;
 		//console.log( "HTML:" , currentDoc.html ) ;
@@ -92,7 +95,7 @@ async function loadBookSource( inputPath , noScrollTop ) {
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
 
-	if ( ! noScrollTop ) { mainContainer.value.scrollTop = 0 ; }
+	if ( ! isReload ) { mainContainer.value.scrollTop = 0 ; }
 
 	// Now we can rebase all the media's URL
 	fixMediaPaths( bookSourceContainer.value , currentDoc.baseDir ) ;
@@ -176,7 +179,7 @@ startup() ;
 	</menu>
 	<div class="layout">
 		<nav ref="toc" class="toc" v-if="showToc">
-			<TableOfContents :items="tocContent" />
+			<TableOfContents :key="docNumber" :items="tocContent" />
 		</nav>
 		<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
 			<div v-if="showOpenButton" class="idle-big-menu">
