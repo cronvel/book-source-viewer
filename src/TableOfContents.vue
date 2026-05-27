@@ -28,10 +28,11 @@ function toggle( href ) {
 	<ul>
 		<li v-for="item in items" :key="item.href">
 			<div class="toc-row">
-				<button v-if="item.children?.length" class="toggle" @click="toggle(item.href)">
-					{{ isOpen(item.href) ? '−' : '+' }}
-				</button>
-				<span v-else class="toggle-placeholder" />
+				<div v-if="item.children?.length" class="toggle" @click="toggle(item.href)">
+					<img v-if="isOpen(item.href)" src="./assets/chevron-down.svg" />
+					<img v-else src="./assets/chevron-right.svg" />
+				</div>
+				<div v-else class="toggle-placeholder" />
 				<a :href="item.href">{{ item.title }}</a>
 			</div>
 
@@ -42,52 +43,91 @@ function toggle( href ) {
 </template>
 
 <style scoped>
+ul {
+	list-style: none;
+	padding-left: 0;
+	margin-block: 0;
+	border: 1px solid #333;
+}
+
+ul ul {
+	padding-left: 1.5em;
+}
+
+li {
+	display: block;
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+	border-top: 1px solid #333;
+}
+
+li:first-child {
+	border-top: none;
+}
+
+li:nth-child(even),
+li:nth-child(even) li:nth-child(even),
+li:nth-child(odd) li:nth-child(odd) {
+	background-color: #77d;
+}
+
+li:nth-child(even):has(> div > a:hover),
+li:nth-child(even) li:nth-child(even):has(> div > a:hover),
+li:nth-child(odd) li:nth-child(odd):has(> div > a:hover) {
+	background-color: #ddf;
+}
+
+li:nth-child(odd),
+li:nth-child(even) li:nth-child(odd),
+li:nth-child(odd) li:nth-child(even) {
+	background-color: #66d;
+}
+
+li:nth-child(odd):has(> div > a:hover),
+li:nth-child(even) li:nth-child(odd):has(> div > a:hover),
+li:nth-child(odd) li:nth-child(even):has(> div > a:hover) {
+	background-color: #ddf;
+}
+
 .toc-row {
 	display: flex;
-	align-items: center;
-	gap: 0.5em;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+	margin: 0;
 }
 
 .toggle,
 .toggle-placeholder {
-	padding: 0.1em;
-	width: 1.2em;
 	flex-shrink: 0;
+
+	display: flex;
+	align-items: center;  
+	box-sizing: border-box;
+	padding: 0.1em;
+	width: 1.5em;
+	background-color: #cccccc80;
 }
 
 .toggle {
 	cursor: pointer;
 }
 
-ul {
-  list-style: none;
-  padding-left: 0;
+.toggle img {
+	margin: 0;
+	padding: 0;
+	display: block;
 }
 
-ul ul {
-  padding-left: 0.8em;
+li a {
+	display: block;
+	box-sizing: border-box;
+	padding: 0.3em;
+	width: 100%;
+	min-height: 1.5em;
+	text-decoration: none;
+	color: #333;
 }
 
-li:nth-child(even),
-li:nth-child(even) li:nth-child(even),
-li:nth-child(odd) li:nth-child(odd)
-{
-	background-color: #d88;
-}
-
-li:nth-child(odd),
-li:nth-child(even) li:nth-child(odd),
-li:nth-child(odd) li:nth-child(even)
-{
-	background-color: #8d8;
-}
-
-a {
-  text-decoration: none;
-  color: #333;
-}
-
-a:hover {
-  text-decoration: underline;
-}
 </style>

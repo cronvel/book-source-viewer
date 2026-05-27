@@ -272,7 +272,7 @@ html, body, #app {
 	max-width: max-content;
 	height: 100%;
 	overflow-y: auto;
-	padding: 0.5em;
+	/*padding: 0.5em;*/
 	border-right: 1px solid #44a;
 	background-color: #88d;
 }
