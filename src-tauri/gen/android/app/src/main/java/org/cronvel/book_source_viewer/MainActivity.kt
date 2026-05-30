@@ -1,0 +1,11 @@
+package org.cronvel.book_source_viewer
+
+import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
+
+class MainActivity : TauriActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    enableEdgeToEdge()
+    super.onCreate(savedInstanceState)
+  }
+}

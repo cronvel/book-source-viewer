@@ -1,4 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+#[cfg(desktop)]
 #[tauri::command]
 fn get_cwd() -> String {
     std::env::current_dir()
@@ -7,6 +8,7 @@ fn get_cwd() -> String {
         .to_string()
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 fn resolve_cli_path(input: String) -> String {
     let path = std::path::PathBuf::from(&input);
@@ -19,6 +21,7 @@ fn resolve_cli_path(input: String) -> String {
     cwd.join(path).to_string_lossy().to_string()
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 fn is_absolute(input: String) -> bool {
     let path = std::path::PathBuf::from(&input);
@@ -27,17 +30,25 @@ fn is_absolute(input: String) -> bool {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_cli::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_store::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![
+    let builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        // Desktop-only
+        builder = builder.plugin(tauri_plugin_cli::init());
+        builder.invoke_handler(tauri::generate_handler![
             get_cwd,
             resolve_cli_path,
             is_absolute
         ])
+    }
+
+    builder
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
