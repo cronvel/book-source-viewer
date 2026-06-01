@@ -57,6 +57,9 @@ async function openBookSourceDialog() {
 
 	const filePath = await openDialog( {
 		multiple: false,
+		// For Android, filters and defaultPath should be removed, Android filter by MIME type not by extension,
+		// so unknown extensions like bks or kfg will fail.
+		//*
 		defaultPath ,
 		filters: [
 			{
@@ -64,6 +67,7 @@ async function openBookSourceDialog() {
 				extensions: ['bks', 'json', 'kfg']
 			}
 		]
+		//*/
 	} ) ;
 
 	if ( filePath ) {

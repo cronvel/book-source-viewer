@@ -30,24 +30,30 @@ fn is_absolute(input: String) -> bool {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default();
 
     #[cfg(desktop)]
     {
         // Desktop-only
         builder = builder.plugin(tauri_plugin_cli::init());
-        builder.invoke_handler(tauri::generate_handler![
+    }
+    
+    builder = builder.plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_store::Builder::default().build());
+
+    #[cfg(desktop)]
+    {
+        // Desktop-only
+        builder = builder.invoke_handler(tauri::generate_handler![
             get_cwd,
             resolve_cli_path,
             is_absolute
-        ])
+        ]);
     }
 
     builder
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_store::Builder::default().build())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
