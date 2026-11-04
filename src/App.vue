@@ -3,6 +3,7 @@ import TableOfContents from './TableOfContents.vue' ;
 import { ref , computed , nextTick } from 'vue' ;
 import { invoke } from '@tauri-apps/api/core' ;
 import { getCurrentWindow } from '@tauri-apps/api/window' ;
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow' ;
 
 // CLI plugin to retrieve args
 import { getMatches } from '@tauri-apps/plugin-cli' ;
@@ -17,9 +18,8 @@ import { fixMediaPaths } from './lib/fixMediaPaths.js' ;
 const mainContainer = ref( null ) ;
 const bookSourceContainer = ref( null ) ;
 
-const showOpenButton = ref( true ) ;
+const noDocumentOpened = ref( true ) ;
 const bookSourceContent = ref( '' ) ;
-const showToc = ref( true ) ;
 const toc = ref( null ) ;
 const tocContent = ref( [] ) ;
 const templateCacheBreaker = ref( 0 ) ;
@@ -40,7 +40,7 @@ async function loadBookSourceFromCLIArgs() {
 		await loadBookSource( inputPath ) ;
 	}
 	else {
-		showOpenButton.value = true ;
+		noDocumentOpened.value = true ;
 		//await openBookSourceDialog() ;
 		let lastFile = appStorage.get( 'lastFile' ) ;
 		if ( lastFile ) {
@@ -88,13 +88,13 @@ async function loadBookSource( inputPath , isReload = false ) {
 		bookSourceContent.value = "<error>" + error + "</error>" ;
 		tocContent.value = [] ;
 		console.error( error ) ;
-		showOpenButton.value = true ;
+		noDocumentOpened.value = true ;
 		return ;
 	}
 
 	bookSourceContent.value = currentDoc.html ;
 	tocContent.value = currentDoc.structuredDocument.toc || [] ;
-	showOpenButton.value = false ;
+	noDocumentOpened.value = false ;
 
 	// Vue's nextTick() is triggered after the update
 	await nextTick() ;
@@ -124,7 +124,7 @@ function reloadBookSource() {
 function clearBookSource() {
 	bookSourceContent.value = '' ;
 	tocContent.value = [] ;
-	showOpenButton.value = true ;
+	noDocumentOpened.value = true ;
 }
 
 
@@ -165,6 +165,28 @@ function printBookSource() {
 
 
 
+function openNewWindow() {
+	const windowId = Math.floor( 1000000 * Math.random() ) ;
+
+	const newWindow = new WebviewWindow( 'viewer-' + windowId , {
+		url: 'index.html' ,
+		title: 'Book Source Viewer' ,
+		width: 1024 ,
+		height: 768 ,
+		resizable: true
+	} ) ;
+
+	newWindow.once( 'tauri://created' , () => {
+		console.log( 'New window created!' ) ;
+	} ) ;
+
+	newWindow.once( 'tauri://error' , error => {
+		console.error( 'Error creating window:' , error ) ;
+	} ) ;
+}
+
+
+
 async function startup() {
 	await appStorage.load() ;
 	loadBookSourceFromCLIArgs() ;
@@ -175,18 +197,19 @@ startup() ;
 
 <template>
 	<menu class="menu-bar">
-		<button @click="openBookSourceDialog"><img src="./assets/open-file.svg" /></button>
 		<button @click="reloadBookSource"><img src="./assets/reload.svg" /></button>
+		<button @click="openBookSourceDialog"><img src="./assets/open-file.svg" /></button>
+		<button @click="openNewWindow"><img src="./assets/new-window.svg" /></button>
 		<button @click="saveAsHtml"><img src="./assets/save.svg" /></button>
 		<button @click="printBookSource"><img src="./assets/print.svg" /></button>
 		<button @click="clearBookSource"><img src="./assets/close.svg" /></button>
 	</menu>
 	<div class="layout">
-		<nav ref="toc" class="toc" v-if="showToc">
+		<nav ref="toc" class="toc" v-if="! noDocumentOpened && tocContent.length">
 			<TableOfContents :key="templateCacheBreaker" :items="tocContent" />
 		</nav>
-		<main ref="mainContainer" class="container" :class="{centered: showOpenButton}">
-			<div v-if="showOpenButton" class="idle-big-menu">
+		<main ref="mainContainer" class="container" :class="{centered: noDocumentOpened}">
+			<div v-if="noDocumentOpened" class="idle-big-menu">
 				<button @click="openBookSourceDialog">Open</button>
 			</div>
 			<div ref="bookSourceContainer" v-html="bookSourceContent"></div>

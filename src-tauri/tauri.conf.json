@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "viewer-0",
         "title": "Book Source Viewer",
         "width": 1024,
         "height": 768

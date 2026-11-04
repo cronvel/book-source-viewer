@@ -6,9 +6,10 @@
     "linux"
   ],
   "windows": [
-    "main"
+    "viewer-*"
   ],
   "permissions": [
-    "cli:default"
+    "cli:default",
+    "core:webview:allow-create-webview-window"
   ]
 }
